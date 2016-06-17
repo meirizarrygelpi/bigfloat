@@ -16,6 +16,11 @@ type Complex struct {
 	l, r big.Float
 }
 
+// Real returns the real part of z.
+func (z *Complex) Real() *big.Float {
+	return &z.l
+}
+
 // Cartesian returns the two cartesian components of z.
 func (z *Complex) Cartesian() (*big.Float, *big.Float) {
 	return &z.l, &z.r
