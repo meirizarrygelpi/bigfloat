@@ -11,11 +11,11 @@ import (
 
 // Commutativity
 
-func TestComplexAddCommutative(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func TestCockleAddCommutative(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
-		l := new(Complex).Add(x, y)
-		r := new(Complex).Add(y, x)
+		l := new(Cockle).Add(x, y)
+		r := new(Cockle).Add(y, x)
 		return l.Equals(r)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -23,22 +23,10 @@ func TestComplexAddCommutative(t *testing.T) {
 	}
 }
 
-func TestComplexMulCommutative(t *testing.T) {
-	f := func(x, y *Complex) bool {
-		// t.Logf("x = %v, y = %v", x, y)
-		l := new(Complex).Mul(x, y)
-		r := new(Complex).Mul(y, x)
-		return l.Equals(r)
-	}
-	if err := quick.Check(f, nil); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestComplexNegConjCommutative(t *testing.T) {
-	f := func(x *Complex) bool {
+func TestCockleNegConjCommutative(t *testing.T) {
+	f := func(x *Cockle) bool {
 		// t.Logf("x = %v", x)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Neg(l.Conj(x))
 		r.Conj(r.Neg(x))
 		return l.Equals(r)
@@ -48,12 +36,26 @@ func TestComplexNegConjCommutative(t *testing.T) {
 	}
 }
 
+// Non-commutativity
+
+func TestCockleMulNonCommutative(t *testing.T) {
+	f := func(x, y *Cockle) bool {
+		// t.Logf("x = %v, y = %v", x, y)
+		l := new(Cockle).Commutator(x, y)
+		zero := new(Cockle)
+		return !l.Equals(zero)
+	}
+	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
+	}
+}
+
 // Anti-commutativity
 
-func TestComplexSubAntiCommutative(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func TestCockleSubAntiCommutative(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Sub(x, y)
 		r.Sub(y, x)
 		r.Neg(r)
@@ -66,10 +68,10 @@ func TestComplexSubAntiCommutative(t *testing.T) {
 
 // Associativity
 
-func XTestComplexAddAssociative(t *testing.T) {
-	f := func(x, y, z *Complex) bool {
+func XTestCockleAddAssociative(t *testing.T) {
+	f := func(x, y, z *Cockle) bool {
 		// t.Logf("x = %v, y = %v, z = %v", x, y, z)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Add(l.Add(x, y), z)
 		r.Add(x, r.Add(y, z))
 		return l.Equals(r)
@@ -79,10 +81,10 @@ func XTestComplexAddAssociative(t *testing.T) {
 	}
 }
 
-func XTestComplexMulAssociative(t *testing.T) {
-	f := func(x, y, z *Complex) bool {
+func XTestCockleMulAssociative(t *testing.T) {
+	f := func(x, y, z *Cockle) bool {
 		// t.Logf("x = %v, y = %v, z = %v", x, y, z)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Mul(l.Mul(x, y), z)
 		r.Mul(x, r.Mul(y, z))
 		return l.Equals(r)
@@ -94,11 +96,26 @@ func XTestComplexMulAssociative(t *testing.T) {
 
 // Identity
 
-func TestComplexAddZero(t *testing.T) {
+func TestCockleAddZero(t *testing.T) {
+	zero := new(Cockle)
+	f := func(x *Cockle) bool {
+		// t.Logf("x = %v", x)
+		l := new(Cockle).Add(x, zero)
+		return l.Equals(x)
+	}
+	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestCockleMulOne(t *testing.T) {
+	one := &Complex{
+		l: *big.NewFloat(1),
+	}
 	zero := new(Complex)
-	f := func(x *Complex) bool {
+	f := func(x *Cockle) bool {
 		// t.Logf("x = %v", x)
-		l := new(Complex).Add(x, zero)
+		l := new(Cockle).Mul(x, &Cockle{*one, *zero})
 		return l.Equals(x)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -106,39 +123,26 @@ func TestComplexAddZero(t *testing.T) {
 	}
 }
 
-func TestComplexMulOne(t *testing.T) {
+func XTestCockleMulInvOne(t *testing.T) {
 	one := &Complex{
 		l: *big.NewFloat(1),
 	}
-	f := func(x *Complex) bool {
+	zero := new(Complex)
+	f := func(x *Cockle) bool {
 		// t.Logf("x = %v", x)
-		l := new(Complex).Mul(x, one)
-		return l.Equals(x)
-	}
-	if err := quick.Check(f, nil); err != nil {
-		t.Error(err)
-	}
-}
-
-func XTestComplexMulInvOne(t *testing.T) {
-	one := &Complex{
-		l: *big.NewFloat(1),
-	}
-	f := func(x *Complex) bool {
-		// t.Logf("x = %v", x)
-		l := new(Complex)
+		l := new(Cockle)
 		l.Mul(x, l.Inv(x))
-		return l.Equals(one)
+		return l.Equals(&Cockle{*one, *zero})
 	}
 	if err := quick.Check(f, nil); err != nil {
 		t.Error(err)
 	}
 }
 
-func XTestComplexAddNegSub(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func XTestCockleAddNegSub(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Sub(x, y)
 		r.Add(x, r.Neg(y))
 		return l.Equals(r)
@@ -148,10 +152,10 @@ func XTestComplexAddNegSub(t *testing.T) {
 	}
 }
 
-func TestComplexAddScalDouble(t *testing.T) {
-	f := func(x *Complex) bool {
+func TestCockleAddScalDouble(t *testing.T) {
+	f := func(x *Cockle) bool {
 		// t.Logf("x = %v", x)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Add(x, x)
 		r.Scal(x, big.NewFloat(2))
 		return l.Equals(r)
@@ -163,10 +167,10 @@ func TestComplexAddScalDouble(t *testing.T) {
 
 // Involutivity
 
-func XTestComplexInvInvolutive(t *testing.T) {
-	f := func(x *Complex) bool {
+func XTestCockleInvInvolutive(t *testing.T) {
+	f := func(x *Cockle) bool {
 		// t.Logf("x = %v", x)
-		l := new(Complex)
+		l := new(Cockle)
 		l.Inv(l.Inv(x))
 		return l.Equals(x)
 	}
@@ -175,10 +179,10 @@ func XTestComplexInvInvolutive(t *testing.T) {
 	}
 }
 
-func TestComplexNegInvolutive(t *testing.T) {
-	f := func(x *Complex) bool {
+func TestCockleNegInvolutive(t *testing.T) {
+	f := func(x *Cockle) bool {
 		// t.Logf("x = %v", x)
-		l := new(Complex)
+		l := new(Cockle)
 		l.Neg(l.Neg(x))
 		return l.Equals(x)
 	}
@@ -187,10 +191,10 @@ func TestComplexNegInvolutive(t *testing.T) {
 	}
 }
 
-func TestComplexConjInvolutive(t *testing.T) {
-	f := func(x *Complex) bool {
+func TestCockleConjInvolutive(t *testing.T) {
+	f := func(x *Cockle) bool {
 		// t.Logf("x = %v", x)
-		l := new(Complex)
+		l := new(Cockle)
 		l.Conj(l.Conj(x))
 		return l.Equals(x)
 	}
@@ -201,12 +205,12 @@ func TestComplexConjInvolutive(t *testing.T) {
 
 // Anti-distributivity
 
-func TestComplexMulConjAntiDistributive(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func TestCockleMulConjAntiDistributive(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Conj(l.Mul(x, y))
-		r.Mul(r.Conj(y), new(Complex).Conj(x))
+		r.Mul(r.Conj(y), new(Cockle).Conj(x))
 		return l.Equals(r)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -214,12 +218,12 @@ func TestComplexMulConjAntiDistributive(t *testing.T) {
 	}
 }
 
-func XTestComplexMulInvAntiDistributive(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func XTestCockleMulInvAntiDistributive(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Inv(l.Mul(x, y))
-		r.Mul(r.Inv(y), new(Complex).Inv(x))
+		r.Mul(r.Inv(y), new(Cockle).Inv(x))
 		return l.Equals(r)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -229,13 +233,13 @@ func XTestComplexMulInvAntiDistributive(t *testing.T) {
 
 // Distributivity
 
-func TestComplexAddConjDistributive(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func TestCockleAddConjDistributive(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Add(x, y)
 		l.Conj(l)
-		r.Add(r.Conj(x), new(Complex).Conj(y))
+		r.Add(r.Conj(x), new(Cockle).Conj(y))
 		return l.Equals(r)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -243,13 +247,13 @@ func TestComplexAddConjDistributive(t *testing.T) {
 	}
 }
 
-func TestComplexSubConjDistributive(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func TestCockleSubConjDistributive(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Sub(x, y)
 		l.Conj(l)
-		r.Sub(r.Conj(x), new(Complex).Conj(y))
+		r.Sub(r.Conj(x), new(Cockle).Conj(y))
 		return l.Equals(r)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -257,13 +261,13 @@ func TestComplexSubConjDistributive(t *testing.T) {
 	}
 }
 
-func TestComplexAddScalDistributive(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func TestCockleAddScalDistributive(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
 		a := big.NewFloat(2)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Scal(l.Add(x, y), a)
-		r.Add(r.Scal(x, a), new(Complex).Scal(y, a))
+		r.Add(r.Scal(x, a), new(Cockle).Scal(y, a))
 		return l.Equals(r)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -271,13 +275,13 @@ func TestComplexAddScalDistributive(t *testing.T) {
 	}
 }
 
-func TestComplexSubScalDistributive(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func TestCockleSubScalDistributive(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
 		a := big.NewFloat(2)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Scal(l.Sub(x, y), a)
-		r.Sub(r.Scal(x, a), new(Complex).Scal(y, a))
+		r.Sub(r.Scal(x, a), new(Cockle).Scal(y, a))
 		return l.Equals(r)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -285,12 +289,12 @@ func TestComplexSubScalDistributive(t *testing.T) {
 	}
 }
 
-func XTestComplexAddMulDistributive(t *testing.T) {
-	f := func(x, y, z *Complex) bool {
+func XTestCockleAddMulDistributive(t *testing.T) {
+	f := func(x, y, z *Cockle) bool {
 		// t.Logf("x = %v, y = %v, z = %v", x, y, z)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Mul(l.Add(x, y), z)
-		r.Add(r.Mul(x, z), new(Complex).Mul(y, z))
+		r.Add(r.Mul(x, z), new(Cockle).Mul(y, z))
 		return l.Equals(r)
 	}
 	if err := quick.Check(f, nil); err != nil {
@@ -298,25 +302,13 @@ func XTestComplexAddMulDistributive(t *testing.T) {
 	}
 }
 
-func XTestComplexSubMulDistributive(t *testing.T) {
-	f := func(x, y, z *Complex) bool {
+func XTestCockleSubMulDistributive(t *testing.T) {
+	f := func(x, y, z *Cockle) bool {
 		// t.Logf("x = %v, y = %v, z = %v", x, y, z)
-		l, r := new(Complex), new(Complex)
+		l, r := new(Cockle), new(Cockle)
 		l.Mul(l.Sub(x, y), z)
-		r.Sub(r.Mul(x, z), new(Complex).Mul(y, z))
+		r.Sub(r.Mul(x, z), new(Cockle).Mul(y, z))
 		return l.Equals(r)
-	}
-	if err := quick.Check(f, nil); err != nil {
-		t.Error(err)
-	}
-}
-
-// Positivity
-
-func TestComplexQuadPositive(t *testing.T) {
-	f := func(x *Complex) bool {
-		// t.Logf("x = %v", x)
-		return x.Quad().Sign() > 0
 	}
 	if err := quick.Check(f, nil); err != nil {
 		t.Error(err)
@@ -325,10 +317,10 @@ func TestComplexQuadPositive(t *testing.T) {
 
 // Composition
 
-func XTestComplexComposition(t *testing.T) {
-	f := func(x, y *Complex) bool {
+func XTestCockleComposition(t *testing.T) {
+	f := func(x, y *Cockle) bool {
 		// t.Logf("x = %v, y = %v", x, y)
-		p := new(Complex)
+		p := new(Cockle)
 		a, b := new(big.Float), new(big.Float)
 		p.Mul(x, y)
 		a.Set(p.Quad())
